@@ -6,13 +6,14 @@ import {
   setHours,
   setMinutes,
   setSeconds,
+  setMilliseconds,
   isBefore,
   isEqual,
   parseISO,
 } from 'date-fns';
 import { utcToZonedTime } from 'date-fns-tz';
 
-import en from 'date-fns/locale/en-US';
+import pt from 'date-fns/locale/pt'; // used for change month's name to portuguese
 
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import api from '~/services/api';
@@ -24,9 +25,10 @@ export default function Dashboard() {
   const [schedule, setSchedule] = useState([]);
   const [date, setDate] = useState(new Date());
 
-  const dateFormatted = useMemo(() => format(date, 'MMMM d ', { locale: en }), [
-    date,
-  ]);
+  const dateFormatted = useMemo(
+    () => format(date, "dd 'de' MMMM", { locale: pt }),
+    [date]
+  );
 
   useEffect(() => {
     async function loadSchedule() {
@@ -37,18 +39,20 @@ export default function Dashboard() {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       const data = range.map(hour => {
-        const checkDate = setSeconds(setMinutes(setHours(date, hour), 0), 0);
-
+        const checkDate = setMilliseconds(
+          setSeconds(setMinutes(setHours(date, hour), 0), 0),
+          0
+        );
         const compareDate = utcToZonedTime(checkDate, timezone);
         return {
-          time: `${hour}:00`,
+          time: `${hour}:00h`,
           past: isBefore(compareDate, new Date()),
           appointment: response.data.find(a =>
             isEqual(parseISO(a.date), compareDate)
           ),
         };
       });
-      //console.tron.log(data);
+      // console.tron.log(data);
 
       setSchedule(data);
     }
